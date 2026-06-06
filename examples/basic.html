@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Smart Condition Builder | Vanilla JS Condition Builder</title>
+  <meta
+    name="description"
+    content="Smart Condition Builder is a reusable vanilla JavaScript UI-only condition builder for nested AND / OR filters."
+  />
+  <meta name="author" content="Hasmukh Jain" />
+  <meta property="og:title" content="Smart Condition Builder" />
+  <meta
+    property="og:description"
+    content="A reusable vanilla JavaScript nested condition builder UI component."
+  />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://github.com/oshjain/smart-condition-builder" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: [
+              "Inter",
+              "ui-sans-serif",
+              "system-ui",
+              "-apple-system",
+              "BlinkMacSystemFont",
+              "Segoe UI",
+              "sans-serif"
+            ],
+            mono: [
+              "JetBrains Mono",
+              "Consolas",
+              "Monaco",
+              "Courier New",
+              "monospace"
+            ]
+          },
+          boxShadow: {
+            glow: "0 0 80px rgba(236, 72, 153, 0.28)",
+            blueGlow: "0 0 80px rgba(59, 130, 246, 0.25)",
+            soft: "0 20px 60px rgba(15, 23, 42, 0.12)",
+            card: "0 18px 45px rgba(15, 23, 42, 0.10)"
+          },
+          animation: {
+            float: "float 7s ease-in-out infinite",
+            floatSlow: "float 10s ease-in-out infinite",
+            shimmer: "shimmer 6s linear infinite",
+            pulseSoft: "pulseSoft 3.5s ease-in-out infinite"
+          },
+          keyframes: {
+            float: {
+              "0%, 100%": { transform: "translateY(0px)" },
+              "50%": { transform: "translateY(-18px)" }
+            },
+            shimmer: {
+              "0%": { backgroundPosition: "0% 50%" },
+              "100%": { backgroundPosition: "200% 50%" }
+            },
+            pulseSoft: {
+              "0%, 100%": { opacity: "0.72" },
+              "50%": { opacity: "1" }
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    rel="stylesheet"
+  />
+
+  <style>
+    :root {
+      --brand-pink: #c21873;
+      --brand-purple: #7c3aed;
+      --brand-blue: #2563eb;
+      --ink: #0f172a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    pre,
+    code {
+      font-family: "JetBrains Mono", Consolas, Monaco, "Courier New", monospace;
+    }
+
+    pre {
+      overflow-x: auto;
+    }
+
+    .material-symbols-outlined {
+      font-variation-settings:
+        "FILL" 0,
+        "wght" 400,
+        "GRAD" 0,
+        "opsz" 24;
+    }
+
+    .glass {
+      background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
+      border: 1px solid rgba(255,255,255,0.16);
+      backdrop-filter: blur(22px);
+    }
+
+    .mesh-bg {
+      background:
+        radial-gradient(circle at 15% 20%, rgba(236, 72, 153, 0.34), transparent 28%),
+        radial-gradient(circle at 82% 12%, rgba(59, 130, 246, 0.32), transparent 30%),
+        radial-gradient(circle at 72% 55%, rgba(124, 58, 237, 0.28), transparent 31%),
+        linear-gradient(135deg, #020617 0%, #111827 38%, #250a32 100%);
+    }
+
+    .gradient-text {
+      background: linear-gradient(90deg, #ffffff, #dbeafe, #fbcfe8, #ffffff);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: shimmer 7s linear infinite;
+    }
+
+    .code-window {
+      background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(2, 6, 23, 0.98)),
+        radial-gradient(circle at top right, rgba(236, 72, 153, 0.18), transparent 30%);
+    }
+
+    .mini-grid {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 34px 34px;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-slate-50 text-slate-800">
+  <div class="fixed inset-0 -z-20 mesh-bg"></div>
+  <div class="fixed inset-0 -z-10 mini-grid opacity-40"></div>
+
+  <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    <div class="absolute left-[7%] top-28 h-72 w-72 rounded-full bg-pink-500/25 blur-3xl animate-float"></div>
+    <div class="absolute right-[9%] top-20 h-80 w-80 rounded-full bg-blue-500/25 blur-3xl animate-floatSlow"></div>
+    <div class="absolute bottom-[22%] left-[55%] h-72 w-72 rounded-full bg-purple-500/20 blur-3xl animate-pulseSoft"></div>
+  </div>
+
+  <header class="relative px-5 pt-6 pb-10 sm:px-8 lg:px-10">
+    <div class="mx-auto max-w-7xl">
+      <nav class="glass sticky top-4 z-50 mb-14 flex items-center justify-between rounded-3xl px-4 py-3 shadow-glow sm:px-5">
+        <a href="#top" class="group flex items-center gap-3 text-white">
+          <span class="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-500 via-purple-500 to-blue-500 shadow-lg shadow-pink-500/25 transition group-hover:scale-105">
+            <span class="material-symbols-outlined">account_tree</span>
+            <span class="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-emerald-400 ring-4 ring-slate-950/60"></span>
+          </span>
+          <span>
+            <span class="block text-sm font-extrabold leading-tight tracking-tight">Smart Condition Builder</span>
+            <span class="block text-xs font-medium text-slate-300">Vanilla JS · UI-only · MIT</span>
+          </span>
+        </a>
+
+        <div class="hidden items-center gap-6 text-sm font-semibold text-slate-300 lg:flex">
+          <a href="#demo" class="transition hover:text-white">Demo</a>
+          <a href="#features" class="transition hover:text-white">Features</a>
+          <a href="#usage" class="transition hover:text-white">Usage</a>
+          <a href="#api" class="transition hover:text-white">API</a>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <a
+            href="https://github.com/oshjain/smart-condition-builder"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hidden items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/20 sm:inline-flex"
+          >
+            <span class="material-symbols-outlined text-[18px]">star</span>
+            GitHub
+          </a>
+          <a
+            href="https://github.com/oshjain"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-2 text-sm font-extrabold text-slate-950 shadow-lg transition hover:-translate-y-0.5 hover:bg-pink-50"
+          >
+            <span class="material-symbols-outlined text-[18px]">person</span>
+            @oshjain
+          </a>
+        </div>
+      </nav>
+
+      <section id="top" class="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+        <div>
+          <div class="mb-6 flex flex-wrap gap-3">
+            <span class="inline-flex items-center gap-2 rounded-full border border-pink-300/30 bg-pink-400/10 px-4 py-2 text-sm font-bold text-pink-100">
+              <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+              Generic public demo page
+            </span>
+            <span class="inline-flex items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-400/10 px-4 py-2 text-sm font-bold text-emerald-100">
+              <span class="material-symbols-outlined text-[18px]">verified</span>
+              No grid dependency
+            </span>
+          </div>
+
+          <h1 class="max-w-5xl text-5xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl">
+            A <span class="gradient-text">beautiful</span> condition builder for serious JavaScript apps.
+          </h1>
+
+          <p class="mt-6 max-w-2xl text-lg leading-8 text-slate-300 sm:text-xl">
+            Build nested AND / OR conditions visually, export a clean condition array, and let your own application decide what happens next.
+          </p>
+
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+            <a
+              href="#demo"
+              class="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 px-6 py-3.5 text-sm font-extrabold text-white shadow-glow transition hover:-translate-y-0.5"
+            >
+              <span class="material-symbols-outlined text-[20px]">play_arrow</span>
+              Try Live Demo
+            </a>
+            <a
+              href="https://github.com/oshjain/smart-condition-builder"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-6 py-3.5 text-sm font-extrabold text-white backdrop-blur transition hover:bg-white/20"
+            >
+              <span class="material-symbols-outlined text-[20px]">open_in_new</span>
+              View Repository
+            </a>
+          </div>
+
+          <div class="mt-10 grid max-w-2xl grid-cols-3 gap-3">
+            <div class="rounded-3xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+              <p class="text-2xl font-black text-white">0</p>
+              <p class="mt-1 text-xs font-semibold text-slate-300">Frameworks needed</p>
+            </div>
+            <div class="rounded-3xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+              <p class="text-2xl font-black text-white">∞</p>
+              <p class="mt-1 text-xs font-semibold text-slate-300">Reusable flows</p>
+            </div>
+            <div class="rounded-3xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+              <p class="text-2xl font-black text-white">MIT</p>
+              <p class="mt-1 text-xs font-semibold text-slate-300">Open license</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="relative">
+          <div class="absolute -inset-4 rounded-[2.25rem] bg-gradient-to-r from-pink-500/30 via-purple-500/20 to-blue-500/30 blur-2xl"></div>
+          <div class="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/10 p-4 shadow-blueGlow backdrop-blur">
+            <div class="code-window rounded-[1.5rem] border border-white/10 p-5 shadow-2xl">
+              <div class="mb-5 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="h-3 w-3 rounded-full bg-red-400"></span>
+                  <span class="h-3 w-3 rounded-full bg-amber-400"></span>
+                  <span class="h-3 w-3 rounded-full bg-emerald-400"></span>
+                </div>
+                <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-slate-400">examples/basic.html</span>
+              </div>
+
+              <pre class="text-sm leading-7 text-slate-100"><code>const conditionBuilder = new ConditionBuilder({
+  fields: [
+    { label: "Customer Name", field: "customerName", type: "string" },
+    { label: "Country", field: "country", type: "string" },
+    { label: "Age", field: "age", type: "number" },
+    { label: "Account Status", field: "accountStatus", type: "string", values: ["Active", "Pending", "Suspended"] }
+  ]
+});
+
+conditionBuilder.build({
+  target: "#conditionBuilderHost"
+});</code></pre>
+            </div>
+
+            <div class="mt-4 grid grid-cols-2 gap-3">
+              <div class="rounded-2xl bg-white p-4">
+                <span class="material-symbols-outlined text-pink-600">rule</span>
+                <p class="mt-2 text-sm font-black text-slate-950">Nested logic</p>
+                <p class="mt-1 text-xs leading-5 text-slate-500">AND / OR groups with visual editing.</p>
+              </div>
+              <div class="rounded-2xl bg-white p-4">
+                <span class="material-symbols-outlined text-blue-600">data_object</span>
+                <p class="mt-2 text-sm font-black text-slate-950">Clean output</p>
+                <p class="mt-1 text-xs leading-5 text-slate-500">Return conditions, no app coupling.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </header>
+
+  <main class="relative -mt-2 px-5 pb-20 sm:px-8 lg:px-10">
+    <div class="mx-auto max-w-7xl">
+      <section id="demo" class="mb-10 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-soft">
+        <div class="border-b border-slate-200 bg-gradient-to-r from-white via-pink-50 to-blue-50 p-5 sm:p-7">
+          <div class="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
+            <div>
+              <div class="mb-2 inline-flex items-center gap-2 rounded-full bg-pink-100 px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-pink-700">
+                <span class="material-symbols-outlined text-[16px]">widgets</span>
+                Live Demo
+              </div>
+              <h2 class="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                Create, validate, and preview conditions
+              </h2>
+              <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                This demo uses one reusable ConditionBuilder instance. The component only returns condition data; your app stays in control.
+              </p>
+            </div>
+
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <button
+                id="resetBuilderBtn"
+                type="button"
+                class="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-extrabold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50"
+              >
+                <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                Reset
+              </button>
+              <button
+                id="loadExampleBtn"
+                type="button"
+                class="inline-flex items-center justify-center gap-2 rounded-2xl border border-purple-200 bg-purple-50 px-5 py-3 text-sm font-extrabold text-purple-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-purple-100"
+              >
+                <span class="material-symbols-outlined text-[18px]">bolt</span>
+                Load Example
+              </button>
+              <button
+                id="saveFilterBtn"
+                type="button"
+                class="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-extrabold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-800"
+              >
+                <span class="material-symbols-outlined text-[18px]">save</span>
+                Save Filter
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid gap-0 lg:grid-cols-[1.15fr_0.85fr]">
+          <div class="bg-slate-50 p-5 sm:p-7">
+            <div class="mb-4 flex items-center justify-between gap-4">
+              <div>
+                <p class="text-sm font-black text-slate-950">Builder Canvas</p>
+                <p class="text-xs text-slate-500">Add conditions and nested AND / OR groups.</p>
+              </div>
+              <span id="builderStatus" class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-extrabold text-emerald-700">Ready</span>
+            </div>
+            <div
+              id="conditionBuilderHost"
+              class="min-h-[340px] rounded-3xl border border-dashed border-slate-300 bg-white p-4 shadow-inner"
+            ></div>
+          </div>
+
+          <aside class="border-t border-slate-200 bg-slate-950 p-5 sm:p-7 lg:border-l lg:border-t-0">
+            <div class="mb-5 flex items-start justify-between gap-3">
+              <div>
+                <div class="mb-2 inline-flex items-center gap-2 rounded-full bg-slate-800 px-3 py-1 text-xs font-bold text-slate-300">
+                  <span class="material-symbols-outlined text-[16px]">terminal</span>
+                  Output Preview
+                </div>
+                <h3 class="text-xl font-black text-white">getConditions()</h3>
+                <p class="mt-1 text-sm leading-6 text-slate-400">The clean condition array returned by the component.</p>
+              </div>
+              <button
+                id="copyOutputBtn"
+                type="button"
+                class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white"
+                title="Copy output"
+              >
+                <span class="material-symbols-outlined text-[19px]">content_copy</span>
+              </button>
+            </div>
+
+            <pre class="min-h-[315px] rounded-3xl border border-white/10 bg-slate-900 p-4 text-xs leading-6 text-slate-200"><code id="conditionOutput">Click "Save Filter" to preview conditions...</code></pre>
+
+            <div id="validationMessage" class="mt-4 hidden rounded-2xl border px-4 py-3 text-sm"></div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="features" class="mb-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-card transition hover:-translate-y-1">
+          <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-pink-50 text-pink-600">
+            <span class="material-symbols-outlined">layers</span>
+          </span>
+          <h3 class="mt-5 text-lg font-black text-slate-950">Nested Groups</h3>
+          <p class="mt-2 text-sm leading-6 text-slate-600">Create advanced AND / OR blocks without writing conditions manually.</p>
+        </article>
+
+        <article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-card transition hover:-translate-y-1">
+          <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+            <span class="material-symbols-outlined">javascript</span>
+          </span>
+          <h3 class="mt-5 text-lg font-black text-slate-950">Vanilla JS</h3>
+          <p class="mt-2 text-sm leading-6 text-slate-600">No React, no Vue, no grid dependency, no backend assumptions.</p>
+        </article>
+
+        <article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-card transition hover:-translate-y-1">
+          <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+            <span class="material-symbols-outlined">recycling</span>
+          </span>
+          <h3 class="mt-5 text-lg font-black text-slate-950">Reusable Instance</h3>
+          <p class="mt-2 text-sm leading-6 text-slate-600">Initialize once and rebuild for create/edit modal flows.</p>
+        </article>
+
+        <article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-card transition hover:-translate-y-1">
+          <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50 text-purple-600">
+            <span class="material-symbols-outlined">verified_user</span>
+          </span>
+          <h3 class="mt-5 text-lg font-black text-slate-950">App Controlled</h3>
+          <p class="mt-2 text-sm leading-6 text-slate-600">The component returns data. Your app decides how to save, apply, or convert it.</p>
+        </article>
+      </section>
+
+      <section id="usage" class="mb-10 grid gap-6 lg:grid-cols-2">
+        <article class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-card">
+          <div class="mb-5 flex items-center gap-3">
+            <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white">
+              <span class="material-symbols-outlined">rocket_launch</span>
+            </span>
+            <div>
+              <h2 class="text-2xl font-black text-slate-950">Quick Start</h2>
+              <p class="text-sm text-slate-500">Create one builder and render it anywhere.</p>
+            </div>
+          </div>
+          <pre class="rounded-3xl bg-slate-950 p-4 text-sm leading-7 text-slate-100"><code>const conditionBuilder = new ConditionBuilder({
+  fields: [
+    { label: "Name", field: "name", type: "string" },
+    { label: "Age", field: "age", type: "number" },
+    { label: "Status", field: "status", type: "string", values: ["Open", "Closed"] }
+  ]
+});
+
+conditionBuilder.build({
+  target: "#conditionBuilderHost"
+});</code></pre>
+        </article>
+
+        <article class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-card">
+          <div class="mb-5 flex items-center gap-3">
+            <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-pink-50 text-pink-600">
+              <span class="material-symbols-outlined">save</span>
+            </span>
+            <div>
+              <h2 class="text-2xl font-black text-slate-950">Save Flow</h2>
+              <p class="text-sm text-slate-500">Validate first, then read conditions.</p>
+            </div>
+          </div>
+          <pre class="rounded-3xl bg-slate-950 p-4 text-sm leading-7 text-slate-100"><code>const validation = conditionBuilder.validate();
+
+if (!validation.valid) {
+  alert(validation.errors.join("\\n"));
+  return;
+}
+
+const conditions = conditionBuilder.getConditions();</code></pre>
+        </article>
+      </section>
+
+      <section class="mb-10 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-card">
+        <div class="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <div>
+            <div class="mb-2 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-blue-700">
+              <span class="material-symbols-outlined text-[16px]">data_array</span>
+              Neutral Output
+            </div>
+            <h2 class="text-3xl font-black text-slate-950">Condition array format</h2>
+            <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+              Outer array means AND. Nested array means OR. A plain object is a single rule.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+          <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+            <h3 class="font-black text-slate-950">Meaning</h3>
+            <div class="mt-4 space-y-3 text-sm font-semibold text-slate-700">
+              <div class="rounded-2xl bg-white p-4 shadow-sm">Country starts with <span class="text-pink-600">Ind</span></div>
+              <div class="rounded-2xl bg-slate-950 p-4 text-white">AND</div>
+              <div class="rounded-2xl bg-white p-4 shadow-sm">
+                <p>( Account Status equals <span class="text-pink-600">Active</span></p>
+                <p class="my-2 font-black text-blue-600">OR</p>
+                <p>Customer Name contains <span class="text-pink-600">Alex</span> )</p>
+              </div>
+            </div>
+          </div>
+
+          <pre class="rounded-3xl bg-slate-950 p-4 text-sm leading-7 text-slate-100"><code>[
+  {
+    field: "country",
+    type: "starts",
+    value: "Ind"
+  },
+  [
+    {
+      field: "accountStatus",
+      type: "=",
+      value: "Active"
+    },
+    {
+      field: "customerName",
+      type: "like",
+      value: "Alex"
+    }
+  ]
+]</code></pre>
+        </div>
+      </section>
+
+      <section id="api" class="mb-10 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-card">
+        <div class="mb-5 flex items-center gap-3">
+          <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+            <span class="material-symbols-outlined">api</span>
+          </span>
+          <div>
+            <h2 class="text-2xl font-black text-slate-950">Public API</h2>
+            <p class="text-sm text-slate-500">Small, predictable, and UI-only.</p>
+          </div>
+        </div>
+
+        <pre class="rounded-3xl bg-slate-950 p-4 text-sm leading-7 text-slate-100"><code>conditionBuilder.build({ target, conditions });
+conditionBuilder.rebuild({ target, conditions });
+conditionBuilder.reset();
+conditionBuilder.destroy();
+
+conditionBuilder.getConditions();
+conditionBuilder.setConditions(conditions);
+
+conditionBuilder.getTree();
+conditionBuilder.setTree(tree);
+
+conditionBuilder.validate();
+
+conditionBuilder.on("change", callback);
+conditionBuilder.off("change", callback);</code></pre>
+      </section>
+
+      <section class="rounded-[2rem] border border-pink-200 bg-gradient-to-br from-pink-50 via-white to-blue-50 p-6 shadow-card">
+        <div class="grid gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+          <div>
+            <div class="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-pink-500 to-blue-500 text-white shadow-glow">
+              <span class="material-symbols-outlined text-[32px]">person_celebrate</span>
+            </div>
+            <h2 class="text-3xl font-black text-slate-950">Created by Hasmukh Jain</h2>
+            <p class="mt-3 text-sm leading-6 text-slate-600">
+              Built as a clean, reusable condition-builder component for modern JavaScript applications.
+            </p>
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-3">
+            <a
+              href="https://github.com/oshjain"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-card"
+            >
+              <span class="material-symbols-outlined text-slate-950">code</span>
+              <p class="mt-3 font-black text-slate-950">GitHub</p>
+              <p class="mt-1 text-sm text-slate-500">@oshjain</p>
+            </a>
+
+            <a
+              href="https://github.com/oshjain/smart-condition-builder"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-card"
+            >
+              <span class="material-symbols-outlined text-pink-600">account_tree</span>
+              <p class="mt-3 font-black text-slate-950">Project</p>
+              <p class="mt-1 text-sm text-slate-500">smart-condition-builder</p>
+            </a>
+
+            <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <span class="material-symbols-outlined text-emerald-600">license</span>
+              <p class="mt-3 font-black text-slate-950">License</p>
+              <p class="mt-1 text-sm text-slate-500">MIT</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="border-t border-white/10 bg-slate-950/95 px-5 py-8 text-slate-400 sm:px-8 lg:px-10">
+    <div class="mx-auto flex max-w-7xl flex-col justify-between gap-4 text-sm md:flex-row md:items-center">
+      <p>
+        <span class="font-bold text-white">Smart Condition Builder</span> — UI-only condition builder by Hasmukh Jain.
+      </p>
+      <div class="flex flex-wrap items-center gap-4">
+        <a href="#demo" class="font-semibold hover:text-white">Demo</a>
+        <a href="#usage" class="font-semibold hover:text-white">Usage</a>
+        <a href="https://github.com/oshjain/smart-condition-builder" target="_blank" rel="noopener noreferrer" class="font-semibold hover:text-white">Repository</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function loadConditionBuilderScript() {
+      const candidates = [
+        "../src/ConditionBuilder.js",
+        "./src/ConditionBuilder.js",
+        "src/ConditionBuilder.js"
+      ];
+
+      return new Promise((resolve, reject) => {
+        let index = 0;
+
+        const tryNext = () => {
+          if (window.ConditionBuilder) {
+            resolve();
+            return;
+          }
+
+          if (index >= candidates.length) {
+            reject(new Error("ConditionBuilder.js could not be loaded. Check the script path."));
+            return;
+          }
+
+          const script = document.createElement("script");
+          script.src = candidates[index];
+          index += 1;
+          script.onload = () => resolve();
+          script.onerror = () => {
+            script.remove();
+            tryNext();
+          };
+          document.body.appendChild(script);
+        };
+
+        tryNext();
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const outputElement = document.querySelector("#conditionOutput");
+      const validationMessageElement = document.querySelector("#validationMessage");
+      const saveButton = document.querySelector("#saveFilterBtn");
+      const resetButton = document.querySelector("#resetBuilderBtn");
+      const loadExampleButton = document.querySelector("#loadExampleBtn");
+      const copyButton = document.querySelector("#copyOutputBtn");
+      const builderStatus = document.querySelector("#builderStatus");
+
+      const showValidationMessage = (type, messages) => {
+        const isSuccess = type === "success";
+
+        validationMessageElement.className = [
+          "mt-4 rounded-2xl border px-4 py-3 text-sm",
+          isSuccess
+            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+            : "border-red-200 bg-red-50 text-red-700"
+        ].join(" ");
+
+        validationMessageElement.innerHTML = Array.isArray(messages)
+          ? messages.map((message) => `<div>${message}</div>`).join("")
+          : messages;
+      };
+
+      const clearValidationMessage = () => {
+        validationMessageElement.className = "mt-4 hidden rounded-2xl border px-4 py-3 text-sm";
+      };
+
+      try {
+        await loadConditionBuilderScript();
+      } catch (error) {
+        outputElement.textContent = error.message;
+        showValidationMessage("error", "ConditionBuilder.js was not found. Place this file in /examples/basic.html or update the script path.");
+        builderStatus.textContent = "Missing script";
+        builderStatus.className = "rounded-full bg-red-100 px-3 py-1 text-xs font-extrabold text-red-700";
+        return;
+      }
+
+      const conditionBuilder = new ConditionBuilder({
+        fields: [
+          { label: "Customer Name", field: "customerName", type: "string" },
+          { label: "Country", field: "country", type: "string" },
+          { label: "Description", field: "description", type: "string" },
+          { label: "Age", field: "age", type: "number" },
+          { label: "Order Count", field: "orderCount", type: "number" },
+          {
+            label: "Account Status",
+            field: "accountStatus",
+            type: "string",
+            values: ["Active", "Pending", "Suspended"]
+          },
+          {
+            label: "Region",
+            field: "region",
+            type: "string",
+            values: ["North", "South", "West"]
+          }
+        ],
+        onChange() {
+          clearValidationMessage();
+          builderStatus.textContent = "Editing";
+          builderStatus.className = "rounded-full bg-blue-100 px-3 py-1 text-xs font-extrabold text-blue-700";
+        }
+      });
+
+      conditionBuilder.build({
+        target: "#conditionBuilderHost"
+      });
+
+      const exampleConditions = [
+        { field: "country", type: "starts", value: "Ind" },
+        [
+          { field: "accountStatus", type: "=", value: "Active" },
+          { field: "customerName", type: "like", value: "Alex" }
+        ]
+      ];
+
+      saveButton.addEventListener("click", () => {
+        const validation = conditionBuilder.validate();
+
+        if (!validation.valid) {
+          showValidationMessage("error", validation.errors || ["Please check your conditions."]);
+          builderStatus.textContent = "Needs fix";
+          builderStatus.className = "rounded-full bg-red-100 px-3 py-1 text-xs font-extrabold text-red-700";
+          return;
+        }
+
+        const conditions = conditionBuilder.getConditions();
+        outputElement.textContent = JSON.stringify(conditions, null, 2);
+        showValidationMessage("success", "Valid conditions. Your app can now save this output.");
+        builderStatus.textContent = "Valid";
+        builderStatus.className = "rounded-full bg-emerald-100 px-3 py-1 text-xs font-extrabold text-emerald-700";
+      });
+
+      resetButton.addEventListener("click", () => {
+        conditionBuilder.reset();
+        outputElement.textContent = "Click \"Save Filter\" to preview conditions...";
+        clearValidationMessage();
+        builderStatus.textContent = "Ready";
+        builderStatus.className = "rounded-full bg-emerald-100 px-3 py-1 text-xs font-extrabold text-emerald-700";
+      });
+
+      loadExampleButton.addEventListener("click", () => {
+        conditionBuilder.setConditions(exampleConditions);
+        outputElement.textContent = JSON.stringify(exampleConditions, null, 2);
+        showValidationMessage("success", "Example loaded. You can edit it or save it as-is.");
+        builderStatus.textContent = "Example loaded";
+        builderStatus.className = "rounded-full bg-purple-100 px-3 py-1 text-xs font-extrabold text-purple-700";
+      });
+
+      copyButton.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(outputElement.textContent || "");
+          showValidationMessage("success", "Output copied to clipboard.");
+        } catch {
+          showValidationMessage("error", "Unable to copy automatically. Select and copy the output manually.");
+        }
+      });
+    });
+  </script>
+</body>
+</html>

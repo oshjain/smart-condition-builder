@@ -1,0 +1,33 @@
+{
+  "name": "smart-condition-builder",
+  "version": "1.0.0",
+  "description": "A reusable vanilla JavaScript nested condition builder UI component.",
+  "main": "src/ConditionBuilder.js",
+  "files": [
+    "src",
+    "examples",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "condition-builder",
+    "query-builder",
+    "filter-builder",
+    "rule-builder",
+    "vanilla-js",
+    "javascript",
+    "tailwind",
+    "nested-filters",
+    "and-or-conditions"
+  ],
+  "author": "Hasmukh Jain",
+  "license": "MIT",
+  "homepage": "https://github.com/oshjain/smart-condition-builder#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oshjain/smart-condition-builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/oshjain/smart-condition-builder/issues"
+  }
+}
