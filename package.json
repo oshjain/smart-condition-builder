@@ -5,7 +5,7 @@
   "main": "src/ConditionBuilder.js",
   "files": [
     "src",
-    "examples",
+    "index.html",
     "README.md",
     "LICENSE"
   ],
@@ -22,7 +22,7 @@
   ],
   "author": "Hasmukh Jain",
   "license": "MIT",
-  "homepage": "https://github.com/oshjain/smart-condition-builder#readme",
+  "homepage": "https://oshjain.github.io/smart-condition-builder/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/oshjain/smart-condition-builder.git"
